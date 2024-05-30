@@ -1,2 +1,2 @@
 class EmptyFileError(Exception):
-  pass
+    pass
