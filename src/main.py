@@ -1,9 +1,8 @@
 import numpy as np
+import sys
+
 from file_reader import FileReader
 
-
-# 
-# returns a 2D array with 0s to pad the end
 def create_2d_matrix(array: np.array, num_cols: int):
     """
     Convert a 1D array into a 2D matrix with num_cols number of columns.
@@ -22,30 +21,26 @@ def create_2d_matrix(array: np.array, num_cols: int):
         A 2D matrix represented by a numpy array.
         It has num_cols number of cols. 
     """
-    # reshape raises an exception if number of elements
-    # does not match the array dimensions
-
     # if the message does not fit into the array
     if len(array) % num_cols != 0:
         # pad it with as many 0s as necessary
         array = np.append(array, [0 for i in range(num_cols - len(array) % num_cols)])
 
-        # reshape the unicode message into a 2D array with cols number of columns
-        # -1 indicates that the array will have as many rows as necessary
-        return np.reshape(array, (-1, num_cols))
+    # reshape the unicode message into a 2D array with cols number of columns
+    # -1 indicates that the array will have as many rows as necessary
+    return np.reshape(array, (-1, num_cols))
 
 
-option = None
-while not(option == 'e' or option == 'd'):
-    option = input('Encrypt(e) or decrypt(d) (case-insensitive): ').lower().strip()
+if len(sys.argv) < 2 or sys.argv[1] != 'encrypt' and sys.argv[1] != 'decrypt':
+    print(sys.argv[1])
+    raise ValueError('The second parameter has to be "encrypt" or "decrypt"')
 
-# if the user wants to encrypt
-if option == 'e':
-    # read the message written in unencrypted.txt
-    unencrypted_message = FileReader.read_message_file(FileReader.UNENCRYPTED_FILEPATH)
+elif sys.argv[1] == 'encrypt':
+    # read the message written in decrypted.txt
+    decrypted_message = FileReader.read_message_file(FileReader.DECRYPTED_FILEPATH)
 
     # convert each letter to its Unicode code point and add it to an array
-    unicode_array = np.array([ord(character) for character in unencrypted_message])
+    unicode_array = np.array([ord(character) for character in decrypted_message])
 
     key_matrix = FileReader.read_key_matrix()
 
@@ -57,18 +52,15 @@ if option == 'e':
     # turn the matrix into a list of strings and then join the list into a string separated by " "
     encrypted_message = ' '.join([str(num) for num in encrypted_matrix.flatten().tolist()])
 
-    print(f'Original message: \n{unencrypted_message}')
-
+    print(f'Original message: \n{decrypted_message}')
     print(f'\nKey matrix: \n{key_matrix}')
-
     print(f'\nEncrypted message: \n{encrypted_message}')
 
     # write the encrypted message into encrypted
     with open(FileReader.ENCRYPTED_FILEPATH, 'w') as encrypted_file:
         encrypted_file.write(encrypted_message)
   
-# if the user wants to decrypt
-else:
+elif sys.argv[1] == 'decrypt':
     # read the encrypted file
     encrypted_message = FileReader.read_message_file(FileReader.ENCRYPTED_FILEPATH)
 
@@ -86,6 +78,6 @@ else:
     print(f'\nKey matrix: \n{key_matrix}')
     print(f'\nDecrypted message: \n{decrypted_message}')
 
-    # write the decrypted message into unencrypted.txt
-    with open(FileReader.UNENCRYPTED_FILEPATH, 'w') as unencrypted_file:
-        unencrypted_file.write(decrypted_message)
+    # write the decrypted message into decrypted.txt
+    with open(FileReader.DECRYPTED_FILEPATHCRYPTED_FILEPATH, 'w') as decrypted_file:
+        decrypted_file.write(decrypted_message)
