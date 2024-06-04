@@ -19,15 +19,15 @@ def create_2d_matrix(array: np.array, num_cols: int):
     -------
     np.array
         A 2D matrix represented by a numpy array.
-        It has num_cols number of cols. 
+        It has num_cols number of cols.
     """
-    # if the message does not fit into the array
+    # If the message does not fit into the array
     if len(array) % num_cols != 0:
-        # pad it with as many 0s as necessary
+        # Pad it with as many 0s as necessary
         array = np.append(array, [0 for i in range(num_cols - len(array) % num_cols)])
 
-    # reshape the unicode message into a 2D array with cols number of columns
-    # -1 indicates that the array will have as many rows as necessary
+    # Reshape the unicode message into a 2D array with cols number of columns
+    #   and as many rows as necessary 
     return np.reshape(array, (-1, num_cols))
 
 
@@ -36,43 +36,46 @@ if len(sys.argv) < 2 or sys.argv[1] != 'encrypt' and sys.argv[1] != 'decrypt':
     raise ValueError('The second parameter has to be "encrypt" or "decrypt"')
 
 elif sys.argv[1] == 'encrypt':
-    # read the message written in decrypted.txt
+    # Read the message written in decrypted.txt
     decrypted_message = FileReader.read_message_file(FileReader.DECRYPTED_FILEPATH)
 
-    # convert each letter to its Unicode code point and add it to an array
+    # Convert each letter to its Unicode code point and add it to an array
     unicode_array = np.array([ord(character) for character in decrypted_message])
 
-    key_matrix = FileReader.read_key_matrix()
+    key_matrix = FileReader.read_key_file()
 
     unicode_matrix = create_2d_matrix(unicode_array, len(key_matrix[0]))
 
-    # the message encrypted and in matrix form
-    encrypted_matrix = np.matmul(unicode_matrix, key_matrix)
+    # Encrypt the matrix
+    encrypted_matrix = np.matmul(unicode_matrix, key_matrix) % sys.maxunicode
 
-    # turn the matrix into a list of strings and then join the list into a string separated by " "
-    encrypted_message = ' '.join([str(num) for num in encrypted_matrix.flatten().tolist()])
+    # Turn the encrypted numbers into Unicode and join it into a str
+    encrypted_message = ' '.join([chr(int(num)) for num in encrypted_matrix.flatten().tolist()])
 
     print(f'Original message: \n{decrypted_message}')
     print(f'\nKey matrix: \n{key_matrix}')
     print(f'\nEncrypted message: \n{encrypted_message}')
 
-    # write the encrypted message into encrypted
+    # Write the encrypted message into encrypted
     with open(FileReader.ENCRYPTED_FILEPATH, 'w') as encrypted_file:
         encrypted_file.write(encrypted_message)
   
 elif sys.argv[1] == 'decrypt':
-    # read the encrypted file
     encrypted_message = FileReader.read_message_file(FileReader.ENCRYPTED_FILEPATH)
+    key_matrix = FileReader.read_key_file()
 
-    # read the key_matrix
-    key_matrix = FileReader.read_key_matrix()
+    # Turn the encrypted message into a matrix of ints
+    encrypted_matrix = create_2d_matrix([ord(num) for num in encrypted_message.split(' ')], len(key_matrix[0]))
 
-    # turn the encrypted message into a matrix of ints
-    encrypted_matrix = create_2d_matrix([int(num) for num in encrypted_message.split(' ')], len(key_matrix[0]))
+    # Obtain the modular inverse of the matrix's determinant
+    determinant = int(np.linalg.det(key_matrix))
+    modular_inverse = pow(determinant, -1, sys.maxunicode)
 
-    # multiply the encrypted_matrix by the inverse of the key to decrypt it
-    decrypted_matrix = np.matmul(encrypted_matrix, np.linalg.inv(key_matrix))
-    decrypted_message = ''.join([chr(round(unicode)) for unicode in decrypted_matrix.flatten().tolist()])
+    # Multiply the encrypted_matrix by the inverse of the key to decrypt it
+    decrypted_matrix = np.matmul(encrypted_matrix, np.linalg.H(key_matrix)) * modular_inverse
+
+    # Join the Unicode ints back into a str
+    decrypted_message = ''.join([print(round(unicode)) for unicode in decrypted_matrix.flatten().tolist()])
 
     print(f'Encrypted message: \n{encrypted_message}')
     print(f'\nKey matrix: \n{key_matrix}')

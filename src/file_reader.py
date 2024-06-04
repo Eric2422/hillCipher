@@ -6,21 +6,20 @@ class FileReader():
     ENCRYPTED_FILEPATH = f'{INPUT_OUTPUT_DIR}/encrypted.txt'
     KEY_FILEPATH = f'{INPUT_OUTPUT_DIR}/key.csv'
     
-    #
     @classmethod
-    def read_message_file(cls, filepath):
+    def read_message_file(cls, filepath: str):
         """
-        Reads the decrypted file and return the string in it.
+        Reads a file and return the string in it.
 
         Parameters
         ----------
-        filepath : _type_
-            _description_
+        filepath : str
+            The path to the file to be read
 
         Returns
         -------
-        string
-            The data in the decrypted file
+        str
+            The data in the file
 
         Raises
         ------
@@ -44,7 +43,7 @@ class FileReader():
             return message
     
     @classmethod
-    def read_key_matrix(cls):
+    def read_key_file(cls):
         """
         Read the key.csv file and returns a 2D array of the key.
 
