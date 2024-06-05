@@ -3,15 +3,15 @@ import sys
 
 from file_reader import FileReader
 
-def create_2d_matrix(array: np.array, num_cols: int):
+def str_to_matrix(message: str, num_cols: int):
     """
-    Convert a 1D array into a 2D matrix with num_cols number of columns.
+    Convert a str into a 2D matrix with num_cols number of columns.
     Any spaces at the end are padded with 0s.
 
     Parameters
     ----------
-    array : np.array
-        A 1D numpy array.
+    message : str
+        A string representing the message.
     num_cols : int
         The number of columns the 2D matrix has. 
 
@@ -21,66 +21,79 @@ def create_2d_matrix(array: np.array, num_cols: int):
         A 2D matrix represented by a numpy array.
         It has num_cols number of cols.
     """
+    # Convert the message into an array of Unicdoe codepoints
+    unicode_array = np.array([ord(num) for num in message])
+
     # If the message does not fit into the array
-    if len(array) % num_cols != 0:
+    if len(unicode_array) % num_cols != 0:
         # Pad it with as many 0s as necessary
-        array = np.append(array, [0 for i in range(num_cols - len(array) % num_cols)])
+        unicode_array = np.append(unicode_array, [0 for i in range(num_cols - len(unicode_array) % num_cols)])
 
     # Reshape the unicode message into a 2D array with cols number of columns
     #   and as many rows as necessary 
-    return np.reshape(array, (-1, num_cols))
+    return np.reshape(unicode_array, (-1, num_cols))
+
+
+def matrix_to_str(matrix: np.array) -> str:
+    """
+    Converts a 2D matrix of Unicode codepoints into a string
+
+    Parameters
+    ----------
+    matrix : np.array
+        A 2D matrix containing Unicode codepoints
+
+    Returns
+    -------
+    str
+        The str encoded by the Unicode codepoints
+    """
+    return ''.join([chr(round(unicode)) for unicode in matrix.flatten().tolist()])
+
+
+def multiply_matrices(message_matrix: np.array, key_matrix: np.array) -> np.array:
+    return np.matmul(message_matrix, key_matrix) % sys.maxunicode
 
 
 if len(sys.argv) < 2 or sys.argv[1] != 'encrypt' and sys.argv[1] != 'decrypt':
     print(sys.argv[1])
     raise ValueError('The second parameter has to be "encrypt" or "decrypt"')
 
-elif sys.argv[1] == 'encrypt':
-    # Read the message written in decrypted.txt
-    decrypted_message = FileReader.read_message_file(FileReader.DECRYPTED_FILEPATH)
+if sys.argv[1] == 'encrypt':
+    input_file = FileReader.PLAINTEXT_FILEPATH
+    output_file = FileReader.CIPHERTEXT_FILEPATH
 
-    # Convert each letter to its Unicode code point and add it to an array
-    unicode_array = np.array([ord(character) for character in decrypted_message])
+elif sys.argv[1] == 'decrypt':
+    input_file = FileReader.CIPHERTEXT_FILEPATH
+    output_file = FileReader.PLAINTEXT_FILEPATH
 
-    key_matrix = FileReader.read_key_file()
+# Read the inputted message
+input_message = FileReader.read_message_file(input_file)
 
-    unicode_matrix = create_2d_matrix(unicode_array, len(key_matrix[0]))
+# Read the key
+key_matrix = FileReader.read_key_file()
 
-    # Encrypt the matrix
-    encrypted_matrix = np.matmul(unicode_matrix, key_matrix) % sys.maxunicode
+# Turn the encrypted message into a matrix of Unicode codepoints
+unicode_matrix = str_to_matrix(input_message, len(key_matrix[0]))
 
-    # Turn the encrypted numbers into Unicode and join it into a str
-    encrypted_message = ''.join([chr(int(num)) for num in encrypted_matrix.flatten().tolist()])
+output_matrix = multiply_matrices(
+    unicode_matrix, 
+    key_matrix if sys.argv[1] == 'encrypt' else np.linalg.inv(key_matrix)
+)
 
-    print(f'Original message: \n{decrypted_message}')
+# Turn the encrypted numbers into Unicode and join it into a str
+output_message = matrix_to_str(output_matrix)
+
+if sys.argv[1] == 'encrypt':
+    print(f'Plaintext message: \n{input_message}')
     print(f'\nKey matrix: \n{key_matrix}')
-    print(f'\nEncrypted message: \n{encrypted_message}')
-
-    # Write the encrypted message into encrypted
-    with open(FileReader.ENCRYPTED_FILEPATH, 'w', encoding='utf-8') as encrypted_file:
-        encrypted_file.write(encrypted_message)
+    print(f'\nCiphertext message: \n{output_message}')
   
 elif sys.argv[1] == 'decrypt':
-    encrypted_message = FileReader.read_message_file(FileReader.ENCRYPTED_FILEPATH)
-    key_matrix = FileReader.read_key_file()
-
-    # Turn the encrypted message into a matrix of ints
-    encrypted_matrix = create_2d_matrix([ord(num) for num in encrypted_message], len(key_matrix[0]))
-
-    # Obtain the modular inverse of the matrix's determinant
-    determinant = int(np.linalg.det(key_matrix))
-    modular_inverse = pow(determinant, -1, sys.maxunicode)
-
-    # Multiply the encrypted_matrix by the inverse of the key to decrypt it
-    decrypted_matrix = np.matmul(encrypted_matrix, np.matrix(key_matrix).getH()) * modular_inverse
-
-    # Join the Unicode ints back into a str
-    decrypted_message = ''.join([print(int(unicode)) for unicode in decrypted_matrix.flatten().tolist()])
-
-    print(f'Encrypted message: \n{encrypted_message}')
+    print(f'Ciphertext message: \n{input_message}')
     print(f'\nKey matrix: \n{key_matrix}')
-    print(f'\nDecrypted message: \n{decrypted_message}')
+    print(f'\nPlaintext message: \n{output_message}')
 
-    # write the decrypted message into decrypted.txt
-    with open(FileReader.DECRYPTED_FILEPATHCRYPTED_FILEPATH, 'w', encoding='utf-8') as decrypted_file:
-        decrypted_file.write(decrypted_message)
+# Write the output into the corresponding file
+with open(output_file, 'w', encoding='utf-8') as write_file:
+    write_file.write(output_message)

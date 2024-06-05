@@ -2,8 +2,8 @@ import numpy as np
 
 class FileReader():
     INPUT_OUTPUT_DIR = '../input_output'
-    DECRYPTED_FILEPATH = f'{INPUT_OUTPUT_DIR}/decrypted.txt'
-    ENCRYPTED_FILEPATH = f'{INPUT_OUTPUT_DIR}/encrypted.txt'
+    PLAINTEXT_FILEPATH = f'{INPUT_OUTPUT_DIR}/plaintext.txt'
+    CIPHERTEXT_FILEPATH = f'{INPUT_OUTPUT_DIR}/ciphertext.txt'
     KEY_FILEPATH = f'{INPUT_OUTPUT_DIR}/key.csv'
     
     @classmethod
