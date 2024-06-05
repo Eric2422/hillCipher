@@ -57,7 +57,7 @@ elif sys.argv[1] == 'encrypt':
     print(f'\nEncrypted message: \n{encrypted_message}')
 
     # Write the encrypted message into encrypted
-    with open(FileReader.ENCRYPTED_FILEPATH, 'w') as encrypted_file:
+    with open(FileReader.ENCRYPTED_FILEPATH, 'w', encoding='utf-8') as encrypted_file:
         encrypted_file.write(encrypted_message)
   
 elif sys.argv[1] == 'decrypt':
@@ -65,22 +65,22 @@ elif sys.argv[1] == 'decrypt':
     key_matrix = FileReader.read_key_file()
 
     # Turn the encrypted message into a matrix of ints
-    encrypted_matrix = create_2d_matrix([ord(num) for num in encrypted_message.split()], len(key_matrix[0]))
+    encrypted_matrix = create_2d_matrix([ord(num) for num in encrypted_message], len(key_matrix[0]))
 
     # Obtain the modular inverse of the matrix's determinant
     determinant = int(np.linalg.det(key_matrix))
     modular_inverse = pow(determinant, -1, sys.maxunicode)
 
     # Multiply the encrypted_matrix by the inverse of the key to decrypt it
-    decrypted_matrix = np.matmul(encrypted_matrix, np.linalg.H(key_matrix)) * modular_inverse
+    decrypted_matrix = np.matmul(encrypted_matrix, np.matrix(key_matrix).getH()) * modular_inverse
 
     # Join the Unicode ints back into a str
-    decrypted_message = ''.join([print(round(unicode)) for unicode in decrypted_matrix.flatten().tolist()])
+    decrypted_message = ''.join([print(int(unicode)) for unicode in decrypted_matrix.flatten().tolist()])
 
     print(f'Encrypted message: \n{encrypted_message}')
     print(f'\nKey matrix: \n{key_matrix}')
     print(f'\nDecrypted message: \n{decrypted_message}')
 
     # write the decrypted message into decrypted.txt
-    with open(FileReader.DECRYPTED_FILEPATHCRYPTED_FILEPATH, 'w') as decrypted_file:
+    with open(FileReader.DECRYPTED_FILEPATHCRYPTED_FILEPATH, 'w', encoding='utf-8') as decrypted_file:
         decrypted_file.write(decrypted_message)
