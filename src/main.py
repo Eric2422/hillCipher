@@ -2,58 +2,7 @@ import numpy as np
 import sys
 
 from file_reader import FileReader
-
-def str_to_matrix(message: str, num_cols: int):
-    """
-    Convert a str into a 2D matrix with num_cols number of columns.
-    Any spaces at the end are padded with 0s.
-
-    Parameters
-    ----------
-    message : str
-        A string representing the message.
-    num_cols : int
-        The number of columns the 2D matrix has. 
-
-    Returns
-    -------
-    np.array
-        A 2D matrix represented by a numpy array.
-        It has num_cols number of cols.
-    """
-    # Convert the message into an array of Unicdoe codepoints
-    unicode_array = np.array([ord(num) for num in message])
-
-    # If the message does not fit into the array
-    if len(unicode_array) % num_cols != 0:
-        # Pad it with as many 0s as necessary
-        unicode_array = np.append(unicode_array, [0 for i in range(num_cols - len(unicode_array) % num_cols)])
-
-    # Reshape the unicode message into a 2D array with cols number of columns
-    #   and as many rows as necessary 
-    return np.reshape(unicode_array, (-1, num_cols))
-
-
-def matrix_to_str(matrix: np.array) -> str:
-    """
-    Converts a 2D matrix of Unicode codepoints into a string
-
-    Parameters
-    ----------
-    matrix : np.array
-        A 2D matrix containing Unicode codepoints
-
-    Returns
-    -------
-    str
-        The str encoded by the Unicode codepoints
-    """
-    return ''.join([chr(round(unicode)) for unicode in matrix.flatten().tolist()])
-
-
-def multiply_matrices(message_matrix: np.array, key_matrix: np.array) -> np.array:
-    return np.matmul(message_matrix, key_matrix) % sys.maxunicode
-
+from matrix import Matrix
 
 if len(sys.argv) < 2 or sys.argv[1] != 'encrypt' and sys.argv[1] != 'decrypt':
     print(sys.argv[1])
@@ -74,15 +23,15 @@ input_message = FileReader.read_message_file(input_file)
 key_matrix = FileReader.read_key_file()
 
 # Turn the encrypted message into a matrix of Unicode codepoints
-unicode_matrix = str_to_matrix(input_message, len(key_matrix[0]))
+unicode_matrix = Matrix.str_to_matrix(input_message, len(key_matrix[0]))
 
-output_matrix = multiply_matrices(
+output_matrix = Matrix.multiply_matrices(
     unicode_matrix, 
     key_matrix if sys.argv[1] == 'encrypt' else np.linalg.inv(key_matrix)
 )
 
 # Turn the encrypted numbers into Unicode and join it into a str
-output_message = matrix_to_str(output_matrix)
+output_message = Matrix.matrix_to_str(output_matrix)
 
 if sys.argv[1] == 'encrypt':
     print(f'Plaintext message: \n{input_message}')
