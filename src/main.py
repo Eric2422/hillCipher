@@ -50,7 +50,7 @@ elif sys.argv[1] == 'encrypt':
     encrypted_matrix = np.matmul(unicode_matrix, key_matrix) % sys.maxunicode
 
     # Turn the encrypted numbers into Unicode and join it into a str
-    encrypted_message = ' '.join([chr(int(num)) for num in encrypted_matrix.flatten().tolist()])
+    encrypted_message = ''.join([chr(int(num)) for num in encrypted_matrix.flatten().tolist()])
 
     print(f'Original message: \n{decrypted_message}')
     print(f'\nKey matrix: \n{key_matrix}')
@@ -65,7 +65,7 @@ elif sys.argv[1] == 'decrypt':
     key_matrix = FileReader.read_key_file()
 
     # Turn the encrypted message into a matrix of ints
-    encrypted_matrix = create_2d_matrix([ord(num) for num in encrypted_message.split(' ')], len(key_matrix[0]))
+    encrypted_matrix = create_2d_matrix([ord(num) for num in encrypted_message.split()], len(key_matrix[0]))
 
     # Obtain the modular inverse of the matrix's determinant
     determinant = int(np.linalg.det(key_matrix))
